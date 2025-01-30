@@ -44,7 +44,7 @@ class CNN(tf.keras.Model):
         model = models.Sequential()
         model.add(layers.InputLayer(shape=self.input_shape))
         
-        # i = [[6, 16], [2, 2], [120, 84]], poolings = [0, 2, 2]
+        # add convolutional and pooling layers
         for i, j in zip(self.filters, self.poolings):
             n_filters, filter_size = i
             model.add(layers.Conv2D(n_filters, kernel_size=(filter_size, filter_size),
@@ -53,15 +53,18 @@ class CNN(tf.keras.Model):
                                     kernel_regularizer=self.regularizer(self.regularizer_rate)))
             if j > 0:
                 model.add(layers.MaxPooling2D(pool_size=(j, j)))
-
+        
+        # flatten the output of the convolutional layers
         model.add(layers.Flatten())
 
+        # add fully connected layers
         for i in self.fc_layers:
             model.add(layers.Dense(i, activation=self.activation, 
                                   kernel_initializer=self.initializer, 
                                   kernel_regularizer=self.regularizer(self.regularizer_rate)))
             model.add(layers.Dropout(self.dropout_rate))
 
+        # add output layer
         model.add(layers.Dense(self.output_shape, activation=self.output_activation))
         
         return model
@@ -90,8 +93,11 @@ if __name__ == '__main__':
     # model parameters
     input_shape = (28, 28, 1)
     output_shape = 10
+    # filters = [[n_filters, filter_size], ...]
     filters = [[16, 5], [32, 5], [64, 5]]
+    # poolings = [pool_size, ...]
     poolings = [0, 0, 2]
+    # fc_layers = [n_units, ...]
     fc_layers = [64, 32]
     activation = 'relu'
     output_activation = 'softmax'
