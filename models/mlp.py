@@ -5,7 +5,7 @@ from tensorflow.keras import optimizers
 from tensorflow.keras import losses
 from tensorflow.keras import metrics
 from datasets.load_data import load_mnist
-
+import time
 
 class MLP(tf.keras.Model):
     def __init__(self, input_shape, output_shape, hidden_layers, 
@@ -120,7 +120,12 @@ if __name__ == __main__:
     mlp.compile_model()
 
     #train model
+
+    #Set a timer to measure the time it takes to train the model
+    start = time.time()
     history = mlp.train(x_train, y_train, x_val, y_val)
+    end = time.time()
+    print(f"Training time: {end - start} seconds")
 
     #evaluate model
     test_loss, test_acc = mlp.evaluate(x_test, y_test)
