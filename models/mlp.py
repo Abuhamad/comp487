@@ -7,13 +7,14 @@ from tensorflow.keras import losses
 from tensorflow.keras import metrics
 from datasets.load_data import load_mnist
 
-class MLP(models.Model):
+
+class MLP(tf.keras.Model):
     def __init__(self, input_shape, output_shape, hidden_layers, 
                  hidden_units, activation, 
                  output_activation, loss, optimizer, 
-                 metrics, epochs =50, batch_size = 64, verbose=1, 
-                 regularizer=tf.keras.regularizers.L2(), regularizer_rate=1e-4, 
-                 initializer='he_normal', dropout_rate=0.5, **kwargs):
+                 epochs =50, batch_size = 64, verbose=1, 
+                 regularizer=tf.keras.regularizers.L2, regularizer_rate=1e-4, 
+                 initializer=tf.keras.initializers.HeNormal(), dropout_rate=0.5, **kwargs):
         super(MLP, self).__init__()
         self.input_shape = input_shape
         self.output_shape = output_shape
@@ -27,11 +28,18 @@ class MLP(models.Model):
         self.output_activation = output_activation
         self.loss = loss
         self.optimizer = optimizer
-        self.metrics = metrics
+        self.metrics = ['accuracy']
         self.epochs = epochs
         self.batch_size = batch_size
         self.verbose = verbose
         self.model = self.create_model()
+    
+    @property
+    def metrics(self):
+        return self._metrics
+    @metrics.setter
+    def metrics(self, value):
+        self._metrics = value
 
     def create_model(self):
         model = models.Sequential()
@@ -40,7 +48,7 @@ class MLP(models.Model):
             model.add(layers.Dense(self.hidden_units, 
                                    activation=self.activation, 
                                    kernel_initializer=self.initializer,
-                                   kernal_regularizer=self.regularizer(self.regularizer_rate)
+                                   kernel_regularizer=self.regularizer(self.regularizer_rate)
                                     ))
             
             model.add(layers.Dropout(self.dropout_rate))
@@ -77,7 +85,10 @@ class MLP(models.Model):
         self.model = models.load_model(path)
     
 
+
+
 if __name__ == __main__:
+    
     #model parameters
     input_shape = (784,)
     output_shape = 10
@@ -92,16 +103,19 @@ if __name__ == __main__:
     epochs = 50
     batch_size = 64
     verbose = 1
-    regularizer = tf.keras.regularizers.L2()
+    regularizer = tf.keras.regularizers.L2
     regularizer_rate = 1e-4
-    initializer = 'he_normal'
+    initializer = tf.keras.initializers.HeNormal()
     dropout_rate = 0.5
 
     #load data
-    (x_train, y_train), (x_val, y_val), (x_test, y_test) = load_mnist()
+    (x_train, y_train), (x_val, y_val), (x_test, y_test) = load_mnist(flatten=True)
     
     #create model
-    mlp = MLP(input_shape, output_shape, hidden_layers, hidden_units, activation, output_activation, loss, optimizer, metrics, epochs, batch_size, verbose, regularizer, regularizer_rate, initializer, dropout_rate)
+    mlp = MLP(input_shape, output_shape, hidden_layers, hidden_units, 
+              activation, output_activation, loss, optimizer, 
+              epochs, batch_size, verbose, regularizer, 
+              regularizer_rate, initializer, dropout_rate)
 
     #compile model
     mlp.compile_model()

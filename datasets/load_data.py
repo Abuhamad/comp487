@@ -1,8 +1,3 @@
-#this file helps to load the data 
-#it provide to help to load MNIST and CIFAR10 datasets from keras.datasets
-#it also provide a function to load the data and preprocess it
-#it also provide a function to split the data into train, validation and test sets
-
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.datasets import mnist
@@ -29,4 +24,5 @@ def load_mnist(flatten=False):
     # one-hot encode the labels
     y_train = to_categorical(y_train, 10)
     y_test = to_categorical(y_test, 10)
+    y_val = to_categorical(y_val, 10)
     return (x_train, y_train), (x_val, y_val), (x_test, y_test)
