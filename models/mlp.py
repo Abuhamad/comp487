@@ -1,4 +1,3 @@
-#this is code for the mlp model using tensorflow
 import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras import models
@@ -43,7 +42,7 @@ class MLP(tf.keras.Model):
 
     def create_model(self):
         model = models.Sequential()
-        model.add(layers.InputLayer(input_shape=self.input_shape))
+        model.add(layers.InputLayer(shape=self.input_shape))
         for i in range(self.hidden_layers):
             model.add(layers.Dense(self.hidden_units, 
                                    activation=self.activation, 
