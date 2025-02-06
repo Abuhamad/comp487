@@ -3,16 +3,16 @@ from tensorflow.keras import layers
 from tensorflow.keras import models
 from tensorflow.keras import optimizers
 from tensorflow.keras import losses
-from datasets.load_data import load_mnist
+from datasets.load_data import load_cifar10
 import time
 
-class CNN(tf.keras.Model):
+class AlexNet(tf.keras.Model):
     def __init__(self, input_shape, output_shape, activation, 
                  output_activation, filters, poolings, fc_layers, loss, optimizer, 
                  epochs =50, batch_size = 64, verbose=1, 
                  regularizer=tf.keras.regularizers.L2, regularizer_rate=1e-4, 
                  initializer=tf.keras.initializers.HeNormal(), dropout_rate=0.5, **kwargs):
-        super(CNN, self).__init__()
+        super(AlexNet, self).__init__()
         self.input_shape = input_shape
         self.output_shape = output_shape
         self.dropout_rate = dropout_rate
@@ -58,21 +58,16 @@ class CNN(tf.keras.Model):
         model.add(layers.Flatten())
 
         # add fully connected layers
-        for i in self.fc_layers:
-            model.add(layers.Dense(i, activation=self.activation, 
-                                  kernel_initializer=self.initializer, 
-                                  kernel_regularizer=self.regularizer(self.regularizer_rate)))
+        for n_units in self.fc_layers:
+            model.add(layers.Dense(n_units, activation=self.activation, 
+                                   kernel_initializer=self.initializer, 
+                                   kernel_regularizer=self.regularizer(self.regularizer_rate)))
             model.add(layers.Dropout(self.dropout_rate))
-
-        # add output layer
-        model.add(layers.Dense(self.output_shape, activation=self.output_activation))
         
+        # add the output layer
+        model.add(layers.Dense(self.output_shape, activation=self.output_activation))
+        model.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
         return model
-
-    def compile_model(self):
-        self.model.compile(loss=self.loss, 
-                           optimizer=self.optimizer, 
-                           metrics=self.metrics)
     
     def train(self, x_train, y_train, x_val, y_val):
         history = self.model.fit(x_train, y_train,
@@ -90,48 +85,23 @@ class CNN(tf.keras.Model):
     
 
 if __name__ == '__main__':
-    # model parameters
-    input_shape = (28, 28, 1)
-    output_shape = 10
-    # filters = [[n_filters, filter_size], ...]
-    filters = [[16, 5], [32, 5], [64, 5]]
-    # poolings = [pool_size, ...]
-    poolings = [0, 0, 2]
-    # fc_layers = [n_units, ...]
-    fc_layers = [64, 32]
+    (x_train, y_train), (x_val, y_val), (x_test, y_test) = load_cifar10()
+    input_shape = x_train.shape[1:]
+    output_shape = y_train.shape[1]
     activation = 'relu'
     output_activation = 'softmax'
+    filters = [(96, 11), (256, 5), (384, 3), (384, 3), (256, 3)]
+    poolings = [3, 0, 0, 0, 3]
+    fc_layers = [4096, 4096]
     loss = losses.CategoricalCrossentropy()
-    learning_rate = 1e-3
-    optimizer = optimizers.Adam(learning_rate=learning_rate)
-    metrics = ['accuracy']
-    epochs = 50
-    batch_size = 64
-    verbose = 1
-    regularizer = tf.keras.regularizers.L2
-    regularizer_rate = 1e-4
-    initializer = tf.keras.initializers.HeNormal()
-    dropout_rate = 0.5
-
-    # load data
-    (x_train, y_train), (x_val, y_val), (x_test, y_test) = load_mnist()
-
-    # create model
-    model = CNN(input_shape, output_shape, activation, 
-                output_activation, filters, poolings, fc_layers, 
-                loss, optimizer, epochs, batch_size, verbose,
-                regularizer, regularizer_rate, initializer, dropout_rate)
+    optimizer = optimizers.Adam()
     
-    # compile model
-    model.compile_model()
-
-    #Set a timer to measure the time it takes to train the model
+    alexnet = AlexNet(input_shape, output_shape, activation, output_activation, 
+                      filters, poolings, fc_layers, loss, optimizer)
+    
     start = time.time()
-    history = model.train(x_train, y_train, x_val, y_val)
-    end = time.time()
-    print(f"Training time: {end - start} seconds")
-
-    #evaluate model
-    test_loss, test_acc = model.evaluate(x_test, y_test)
-
-
+    history = alexnet.train(x_train, y_train, x_val, y_val)
+    print('Training time: ', time.time() - start)
+    
+    test_loss, test_acc = alexnet.evaluate(x_test, y_test)
+    print('Test accuracy:', test_acc)

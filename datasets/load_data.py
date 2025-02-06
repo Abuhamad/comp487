@@ -97,3 +97,4 @@ def load_cifar100(flatten=False):
     y_test = to_categorical(y_test, 100)
     y_val = to_categorical(y_val, 100)
     return (x_train, y_train), (x_val, y_val), (x_test, y_test)
+
